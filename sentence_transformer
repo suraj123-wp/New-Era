@@ -1,0 +1,41 @@
+import mysql.connector
+from sentence_transformers import SentenceTransformer
+import numpy as np
+
+# MySQL connection function
+def connect_to_db():
+    connection = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="Sonali1@2",  # Replace with your MySQL password
+        database="sales_data_db"
+    )
+    return connection
+
+# Fetch sales data from MySQL
+def fetch_sales_data():
+    connection = connect_to_db()
+    cursor = connection.cursor(dictionary=True)  # Using dictionary for easier key access
+    query = "SELECT * FROM sales_data"
+    cursor.execute(query)
+    result = cursor.fetchall()
+    connection.close()  # Close connection after fetching the data
+    return result
+
+# Load pre-trained model for generating embeddings
+model = SentenceTransformer('all-MiniLM-L6-v2')
+
+# Function to generate embeddings from sales data
+def generate_embeddings(sales_data):
+    sales_strings = [
+        f"Channel: {row['channel']}, Date: {row['sale_date']}, Product: {row['product_name']}, City: {row['city']}, Quantity: {row['quantity']}, Sales: {row['sales']}"
+        for row in sales_data
+    ]
+    embeddings = model.encode(sales_strings)
+    return embeddings
+
+# Fetch sales data and generate embeddings
+sales_data = fetch_sales_data()
+embeddings = generate_embeddings(sales_data)
+print(np.array(embeddings))
+
